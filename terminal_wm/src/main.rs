@@ -11,7 +11,9 @@ use titlebar::titlebar::WindowTitleBar;
 
 fn spawn_window(ws: &mut HashMap<u32, Window>, fwindow: &mut u32) {
     *fwindow += 1;
-    ws.insert(*fwindow, Window::new());
+    let mut window = Window::new();
+    window.add_widget(Box::new(WindowTitleBar::new()));
+    ws.insert(*fwindow, window);
 }
 
 fn get_focused_window<'a>(ws: &'a mut HashMap<u32, Window>, fwindow: &u32) -> Option<&'a mut Window> {
@@ -62,7 +64,6 @@ fn main() {
     {
         let mut fwindow = get_focused_window(&mut windows, &focused_window).unwrap();
         fwindow.add_widget(Box::new(Label::new("text widget".into(), (5, 5))));
-        fwindow.add_widget(Box::new(WindowTitleBar::new()));
     }
     'wmloop: loop {
         if let Some(ch) = screen.window.getch() {

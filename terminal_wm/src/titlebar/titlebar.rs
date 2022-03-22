@@ -21,7 +21,7 @@ impl Drawable for WindowTitleBar {
             window.mvprintw(titlebar_pos, parent.offset.1, "│");
             window.mvprintw(titlebar_pos, parent.size.1 + parent.offset.1, "│");
             for i in parent.title.chars().into_iter().enumerate() {
-                if i.0 as i32 + parent.offset.1 <= parent.size.1 - 1 {
+                if i.0 as i32 + parent.offset.1 <= parent.offset.1 + parent.size.1 - 1 {
                     window.mvaddch(titlebar_pos, i.0 as i32 + 2 + parent.offset.1, i.1);
                 }
             }
