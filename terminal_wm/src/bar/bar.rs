@@ -29,13 +29,15 @@ impl Bar {
 
 impl Drawable for Bar {
     fn draw(&self, window: &pancurses::Window, parent: Option<&Window>) {
-        window.mvprintw(0, 0, String::from("-").repeat(self.size.1 as usize));
+        window.mvprintw(0, 0+1, String::from("─").repeat(self.size.1 as usize - 1));
+        window.mvprintw(0, 0, "╭");
+        window.mvprintw(0, self.size.1 -1, "╮");
         let mut pos = 3;
-        window.mvaddch(1, 0, '|');
-        window.mvaddch(1, self.size.1-1, '|');
+        window.mvprintw(1, 0, "│");
+        window.mvprintw(1, self.size.1-1, "│");
         for i in &self.modules {
             let module_info = i.get_module(&self);
-            let module = format!("{} | ", module_info.1);
+            let module = format!("{} │ ", module_info.1);
             if pos + (module.len() as i32) + module_info.0 < self.size.1 - 2 {
                 window.mvprintw(1, pos + module_info.0, module.clone());
                 pos += module.len() as i32;
@@ -44,6 +46,8 @@ impl Drawable for Bar {
         }
 
         window.refresh();
-        window.mvprintw(2, 0, String::from("-").repeat(self.size.1 as usize));
+        window.mvprintw(2, 1, String::from("─").repeat(self.size.1 as usize - 1));
+        window.mvprintw(2, 0, "╰");
+        window.mvprintw(2, self.size.1 - 1, "╯");
     }
 }
