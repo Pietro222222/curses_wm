@@ -5,22 +5,25 @@ pub struct Bar {
     pub windows: u32,
     pub focused_window: String,
     pub size: (i32, i32),
+    pub tiling_mode: crate::tiling::WindowsMode,
     pub modules: Vec<Box<dyn DrawableModule>>
 }
 
 impl Bar {
-    pub fn new(w: u32, fw: String, size: (i32, i32)) -> Bar {
+    pub fn new(w: u32, fw: String, size: (i32, i32), mode: crate::tiling::WindowsMode) -> Bar {
         Self {
             focused_window: fw,
             windows: w,
             size,
+            tiling_mode: mode,
             modules: vec![]
         }
     }
-    pub fn update(&mut self, w: u32, fw: String, size: (i32, i32)) {
+    pub fn update(&mut self, w: u32, fw: String, size: (i32, i32), mode: crate::tiling::WindowsMode) {
         self.focused_window = fw;
         self.windows = w;
         self.size = size;
+        self.tiling_mode = mode;
     }
     pub fn add_module(&mut self, module: Box<dyn DrawableModule>) {
         self.modules.push(module);

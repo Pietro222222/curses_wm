@@ -1,7 +1,10 @@
 use std::{process::exit, thread::{self, spawn}, time::Duration, collections::HashMap};
 mod bar;
 mod titlebar;
-use bar::{bar::Bar, window_module::WindowModule, window_title_module::WindowTitleModule, date_module::BarDateModule, time_module::BarTimeModule};
+mod tiling;
+
+use tiling::WindowsMode;
+use bar::{bar::Bar, window_module::WindowModule, window_title_module::WindowTitleModule, date_module::BarDateModule, time_module::BarTimeModule, window_mode_module::WindowModeModule};
 
 use bar::window_module;
 
@@ -63,21 +66,15 @@ fn tile_windows<'a>(ws: &'a mut HashMap<u32, Window>, screen_pos: (i32, i32), to
         i.1.size.0 = (screen_pos.0 - top_limits.0) - 1;
     }
 }
-
-#[derive(PartialEq, Eq)]
-enum WindowsMode {
-    Tiling,
-    Float
-}
-
 fn main() {
     let mut screen = Screen::new((5, 0));
     let mut focused_window: u32 = 0;
     let mut windows: HashMap<u32, Window> = HashMap::new();
-    let mut bar = Bar::new(windows.len() as u32, get_focused_window_title(&mut windows, &focused_window), screen.size);
-    let mut state_changed = true;
     let mut mode = WindowsMode::Float;
+    let mut bar = Bar::new(windows.len() as u32, get_focused_window_title(&mut windows, &focused_window), screen.size, mode);
+    let mut state_changed = true;
     bar.add_module(Box::new(WindowModule::new(0)));
+    bar.add_module(Box::new(WindowModeModule::new(0)));
     bar.add_module(Box::new(WindowTitleModule::new(0)));
     bar.add_module(Box::new(BarDateModule::new(0)));
     bar.add_module(Box::new(BarTimeModule::new(0)));
@@ -87,7 +84,10 @@ fn main() {
         let mut fwindow = get_focused_window(&mut windows, &focused_window).unwrap();
         fwindow.add_widget(Box::new(Label::new("text widget".into(), (5, 5))));
     }
-    tile_windows(&mut windows, screen.size, screen.top_limits);
+    if mode == WindowsMode::Tiling {
+        tile_windows(&mut windows, screen.size, screen.top_limits);
+    }
+    
     'wmloop: loop {
         if let Some(ch) = screen.window.getch() {
             match ch {
@@ -188,7 +188,17 @@ fn main() {
                 }
             }
         }
-        bar.update(windows.len() as u32, get_focused_window_title(&mut windows, &focused_window), screen.size);
+        
+        if screen.window.get_max_yx() != screen.size {
+            screen.update();
+            screen.clean_up();
+            if mode == WindowsMode::Tiling {
+                tile_windows(&mut windows, screen.size, screen.top_limits);
+            }
+            state_changed = true;
+            
+        }
+        bar.update(windows.len() as u32, get_focused_window_title(&mut windows, &focused_window), screen.size, mode);
         if state_changed {
             screen.draw_widget(&mut bar, None);
             screen.window.refresh();
