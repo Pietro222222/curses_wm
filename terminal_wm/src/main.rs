@@ -59,10 +59,16 @@ fn tile_windows<'a>(ws: &'a mut HashMap<u32, Window>, screen_pos: (i32, i32), to
     for (pos, i) in ws.iter_mut().enumerate() {
         i.1.offset.1 = x_size * (pos as i32);
         i.1.size.1 = x_size - 1;
+        i.1.offset.0 = top_limits.0;
         i.1.size.0 = (screen_pos.0 - top_limits.0) - 1;
     }
 }
 
+#[derive(PartialEq, Eq)]
+enum WindowsMode {
+    Tiling,
+    Float
+}
 
 fn main() {
     let mut screen = Screen::new((5, 0));
@@ -70,6 +76,7 @@ fn main() {
     let mut windows: HashMap<u32, Window> = HashMap::new();
     let mut bar = Bar::new(windows.len() as u32, get_focused_window_title(&mut windows, &focused_window), screen.size);
     let mut state_changed = true;
+    let mut mode = WindowsMode::Float;
     bar.add_module(Box::new(WindowModule::new(0)));
     bar.add_module(Box::new(WindowTitleModule::new(0)));
     bar.add_module(Box::new(BarDateModule::new(0)));
@@ -142,7 +149,10 @@ fn main() {
                     }
                     if c == 'T' {
                         spawn_window(&mut windows, &mut focused_window);
-                        tile_windows(&mut windows, screen.size, screen.top_limits);
+                        if mode == WindowsMode::Tiling {
+                            tile_windows(&mut windows, screen.size, screen.top_limits);
+                        }
+                        
                         state_changed = true;
                         screen.clean_up();
                     }
@@ -153,9 +163,25 @@ fn main() {
                     if c == 'W' {
                         delete_focused_window(&mut windows, &mut focused_window);
                         
-                        tile_windows(&mut windows, screen.size, screen.top_limits);
+                        if mode == WindowsMode::Tiling {
+                            tile_windows(&mut windows, screen.size, screen.top_limits);
+                        }
                         screen.clean_up();
                         state_changed = true;
+                    }
+                    if c == 'K' {
+                        match mode {
+                            WindowsMode::Float => {
+                                mode = WindowsMode::Tiling;
+                                tile_windows(&mut windows, screen.size, screen.top_limits);
+                                screen.clean_up();
+                                state_changed = true;
+
+                            },
+                            WindowsMode::Tiling => {
+                                mode = WindowsMode::Float;
+                            }
+                        }
                     }
                 }
                 _ => {
